@@ -62,9 +62,7 @@ def main() -> None:
                 prov_df["last_name"] + ", " + prov_df["first_name"]
             )
             st.dataframe(prov_df, use_container_width=True)
-            chart_df = prov_df.set_index("provider_name")[
-                ["encounter_count"]
-            ]
+            chart_df = prov_df.set_index("provider_name")[["encounter_count"]]
             st.bar_chart(chart_df)
 
     st.markdown("---")
@@ -75,9 +73,7 @@ def main() -> None:
     if ww_df.empty:
         st.info("No encounter data for weekend/weekday split.")
     else:
-        ww_df["label"] = ww_df["is_weekend"].map(
-            {0: "Weekday", 1: "Weekend"}
-        )
+        ww_df["label"] = ww_df["is_weekend"].map({0: "Weekday", 1: "Weekend"})
         st.dataframe(ww_df, use_container_width=True)
 
         chart_df = ww_df.set_index("label")[["encounter_count"]]

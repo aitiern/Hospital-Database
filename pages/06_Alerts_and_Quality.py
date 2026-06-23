@@ -57,9 +57,7 @@ def main() -> None:
         st.subheader("Chronic Condition Patients Without Recent Encounter")
         df = getChronicPatientsWithNoRecentEncounter(days=int(days_chronic))
         if df.empty:
-            st.success(
-                "No patients currently meet this condition (which is good!)."
-            )
+            st.success("No patients currently meet this condition (which is good!).")
         else:
             st.warning(
                 f"{len(df)} patient(s) have chronic conditions and "
@@ -90,17 +88,11 @@ def main() -> None:
             "Use risk_bucket='High' instead of numeric threshold",
             value=False,
         )
-        df = getHighRiskPatients(
-            minScore=float(min_score), bucketOnly=bucket_only
-        )
+        df = getHighRiskPatients(minScore=float(min_score), bucketOnly=bucket_only)
         if df.empty:
-            st.success(
-                "No patients currently meet the selected high-risk threshold."
-            )
+            st.success("No patients currently meet the selected high-risk threshold.")
         else:
-            st.warning(
-                f"{len(df)} patient(s) are currently flagged as high-risk."
-            )
+            st.warning(f"{len(df)} patient(s) are currently flagged as high-risk.")
             st.dataframe(df, use_container_width=True)
 
 

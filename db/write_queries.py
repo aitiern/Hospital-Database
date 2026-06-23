@@ -24,16 +24,14 @@ def logAuditEvent(
     Insert a simple audit log entry. Values are serialized as JSON strings.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         INSERT INTO audit_log
           (user_provider_id, entity_type, entity_id, action,
            old_values_json, new_values_json)
         VALUES
           (:user_provider_id, :entity_type, :entity_id, :action,
            :old_values_json, :new_values_json)
-        """
-    )
+        """)
     with engine.begin() as conn:
         conn.execute(
             sql,
@@ -60,16 +58,14 @@ def createEncounter(
     Insert a new encounter and return encounter_id.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         INSERT INTO encounters
             (patient_id, provider_id, facility_id,
              encounter_dt, reason, notes)
         VALUES
             (:patient_id, :provider_id, :facility_id,
              :encounter_dt, :reason, :notes)
-        """
-    )
+        """)
     with engine.begin() as conn:
         result = conn.execute(
             sql,
@@ -99,16 +95,14 @@ def createAppointment(
     Insert a new appointment and return appointment_id.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         INSERT INTO appointments
             (patient_id, provider_id, facility_id,
              start_time, end_time, reason, status)
         VALUES
             (:patient_id, :provider_id, :facility_id,
              :start_time, :end_time, :reason, :status)
-        """
-    )
+        """)
     with engine.begin() as conn:
         result = conn.execute(
             sql,
@@ -140,16 +134,14 @@ def createTreatmentPlanItem(
     Insert a new treatment plan item and return tpi_id.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         INSERT INTO treatmentplanitems
             (treatment_plan_id, item_type, medication_id, resource_id,
              instructions, frequency, start_date, end_date)
         VALUES
             (:treatment_plan_id, :item_type, :medication_id, :resource_id,
              :instructions, :frequency, :start_date, :end_date)
-        """
-    )
+        """)
     with engine.begin() as conn:
         result = conn.execute(
             sql,
@@ -166,4 +158,3 @@ def createTreatmentPlanItem(
         )
         tpi_id = result.lastrowid or 0
     return int(tpi_id)
-

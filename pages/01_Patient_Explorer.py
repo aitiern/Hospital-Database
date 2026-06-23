@@ -71,9 +71,7 @@ def main() -> None:
         st.write(f"**Consent to data sharing:** {consent}")
 
     # Save to session for Patient Chart page
-    st.session_state["selected_patient_id"] = int(
-        selected_patient["patient_id"]
-    )
+    st.session_state["selected_patient_id"] = int(selected_patient["patient_id"])
 
     st.info(
         "This patient is now stored as the active selection. "

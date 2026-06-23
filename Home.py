@@ -16,8 +16,8 @@ from db.queries import (
     getProviders,
 )
 
-
 # ---------- Sidebar: "login" as provider ----------
+
 
 def renderLoginSidebar() -> None:
     """
@@ -44,9 +44,7 @@ def renderLoginSidebar() -> None:
         current_id = st.session_state.get("current_provider_id")
         index_default = 0
         if current_id is not None:
-            matches = providers_df.index[
-                providers_df["provider_id"] == current_id
-            ]
+            matches = providers_df.index[providers_df["provider_id"] == current_id]
             if len(matches) > 0:
                 index_default = int(matches[0])
 
@@ -70,6 +68,7 @@ def renderLoginSidebar() -> None:
 
 # ---------- Main page ----------
 
+
 def main() -> None:
     st.set_page_config(
         page_title="HealthDB Clinical Platform",
@@ -81,15 +80,13 @@ def main() -> None:
     st.title("HealthDB Clinical Platform")
     st.subheader("Integrated EHR, Quality Monitoring, and Analytics")
 
-    st.write(
-        """
+    st.write("""
         Welcome to the **HealthDB** application – a teaching-focused,
         clinic-style system that combines:
         - A **normalized transactional EHR** (patients, encounters, meds, plans),
         - A **data warehouse / star schema** for analytics, and
         - A **Streamlit frontend** for providers, staff, and analysts.
-        """
-    )
+        """)
 
     # ---------- KPI metrics from core tables ----------
     counts = getCountsSummary()
@@ -109,8 +106,7 @@ def main() -> None:
 
     with nav_col1:
         st.markdown("### 🧍 Patient-Centered Views")
-        st.markdown(
-            """
+        st.markdown("""
             **Patient Explorer**  
             - Search patients by MRN / name / location  
             - Set an active patient for the rest of the app  
@@ -122,13 +118,11 @@ def main() -> None:
             - Encounters & appointments  
             - Referrals, insurance, care team  
             - Vitals timeline & model risk score
-            """
-        )
+            """)
 
     with nav_col2:
         st.markdown("### 👨‍⚕️ Provider & Workflow")
-        st.markdown(
-            """
+        st.markdown("""
             **Provider Dashboard**  
             - See a provider's panel size  
             - Upcoming schedule (next 24h)  
@@ -138,13 +132,11 @@ def main() -> None:
             - Record new encounters  
             - Schedule new appointments  
             - Add treatment plan items  
-            """
-        )
+            """)
 
     with nav_col3:
         st.markdown("### 📊 Quality & Analytics")
-        st.markdown(
-            """
+        st.markdown("""
             **Alerts & Quality**  
             - Chronic patients with no recent encounters  
             - Active plans without follow-up  
@@ -154,8 +146,7 @@ def main() -> None:
             - Encounters by month (time trend)  
             - Encounters by facility / provider  
             - Weekend vs weekday volumes  
-            """
-        )
+            """)
 
     st.info(
         "Use the **Streamlit sidebar page selector** to navigate to these "
@@ -203,33 +194,27 @@ def main() -> None:
 
     with arch_col1:
         st.markdown("#### Transactional EHR Layer")
-        st.markdown(
-            """
+        st.markdown("""
             - **Core tables**: patients, providers, facilities, encounters,
               appointments, conditions, medications, treatmentplans, treatmentplanitems  
             - **Care coordination**: care teams, referrals, insurance policies  
             - **Clinical extensions**: patient_vitals, risk_scores  
             - **Auditability**: audit_log (for key write operations)
-            """
-        )
+            """)
 
     with arch_col2:
         st.markdown("#### Analytics & Warehouse Layer")
-        st.markdown(
-            """
+        st.markdown("""
             - **Dimensions**: dim_date, dim_provider, dim_facility, dim_condition  
             - **Facts**: fact_encounter, fact_appointment, fact_treatmentplan  
             - Designed for **OLAP-style queries** about volume, utilization,
               provider productivity, and chronic disease burden.
-            """
-        )
+            """)
 
-    st.markdown(
-        """
+    st.markdown("""
         Together, these layers support both **day-to-day clinical workflows**
         and **longitudinal analytics** from the same logical health database.
-        """
-    )
+        """)
 
     st.markdown("---")
 

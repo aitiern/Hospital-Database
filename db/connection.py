@@ -6,7 +6,7 @@ from sqlalchemy.engine import Engine
 
 # 🔧 EDIT THESE FOR YOUR SETUP
 DB_USER = "root"
-DB_PASSWORD = ""        # or "your_password"
+DB_PASSWORD = ""  # or "your_password"
 DB_HOST = "127.0.0.1"
 DB_PORT = 3306
 DB_NAME = "healthdb"

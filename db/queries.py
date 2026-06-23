@@ -12,6 +12,7 @@ from .connection import getDbEngine
 
 # ---------- General summary queries ----------
 
+
 def getCountsSummary() -> dict:
     """
     High-level counts for dashboard: patients, providers, active facilities,
@@ -31,12 +32,10 @@ def getCountsSummary() -> dict:
         ).scalar()
         today = date.today()
         upcoming_appts = conn.execute(
-            text(
-                """
+            text("""
                 SELECT COUNT(*) FROM appointments
                 WHERE start_time >= :start_of_day AND start_time < :end_of_day
-                """
-            ),
+                """),
             {
                 "start_of_day": datetime.combine(today, datetime.min.time()),
                 "end_of_day": datetime.combine(today, datetime.max.time()),
@@ -57,8 +56,7 @@ def getTopConditions(limit: int = 10) -> pd.DataFrame:
     Top conditions by patient count.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             c.condition_id,
             c.icd10_code,
@@ -71,14 +69,14 @@ def getTopConditions(limit: int = 10) -> pd.DataFrame:
         GROUP BY c.condition_id, c.icd10_code, c.name, c.chronic
         ORDER BY patient_count DESC, c.name
         LIMIT :limit
-        """
-    )
+        """)
     with engine.connect() as conn:
         df = pd.read_sql(sql, conn, params={"limit": limit})
     return df
 
 
 # ---------- Patient list / search ----------
+
 
 def getPatients(
     searchText: Optional[str] = None,
@@ -112,9 +110,7 @@ def getPatients(
 
     if searchText and searchText.strip():
         params["q"] = f"%{searchText.strip()}%"
-        filters.append(
-            "(p.mrn LIKE :q OR p.first_name LIKE :q OR p.last_name LIKE :q)"
-        )
+        filters.append("(p.mrn LIKE :q OR p.first_name LIKE :q OR p.last_name LIKE :q)")
 
     if city and city.strip():
         params["city"] = city.strip()
@@ -129,14 +125,10 @@ def getPatients(
     else:
         where_clause = ""
 
-    sql = text(
-        base_sql
-        + where_clause
-        + """
+    sql = text(base_sql + where_clause + """
         ORDER BY p.last_name, p.first_name
         LIMIT :limit
-        """
-    )
+        """)
 
     with engine.connect() as conn:
         df = pd.read_sql(sql, conn, params=params)
@@ -149,8 +141,7 @@ def getPatientById(patientId: int) -> Optional[pd.Series]:
     Returns a single patient's demographic row as a Series, or None.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             patient_id,
             mrn,
@@ -171,8 +162,7 @@ def getPatientById(patientId: int) -> Optional[pd.Series]:
             updated_at
         FROM patients
         WHERE patient_id = :patient_id
-        """
-    )
+        """)
     with engine.connect() as conn:
         df = pd.read_sql(sql, conn, params={"patient_id": patientId})
     if df.empty:
@@ -182,10 +172,10 @@ def getPatientById(patientId: int) -> Optional[pd.Series]:
 
 # ---------- Patient clinical data ----------
 
+
 def getPatientConditions(patientId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             pc.patient_id,
             pc.condition_id,
@@ -199,16 +189,14 @@ def getPatientConditions(patientId: int) -> pd.DataFrame:
         JOIN conditions c ON pc.condition_id = c.condition_id
         WHERE pc.patient_id = :patient_id
         ORDER BY pc.onset_date DESC, c.name
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
 
 def getPatientMedications(patientId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             pm.patient_id,
             pm.medication_id,
@@ -232,16 +220,14 @@ def getPatientMedications(patientId: int) -> pd.DataFrame:
             ON pm.prescribing_provider_id = pp.provider_id
         WHERE pm.patient_id = :patient_id
         ORDER BY pm.status DESC, pm.start_date DESC, m.name
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
 
 def getPatientTreatmentPlans(patientId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             tp.treatment_plan_id,
             tp.patient_id,
@@ -260,16 +246,14 @@ def getPatientTreatmentPlans(patientId: int) -> pd.DataFrame:
         LEFT JOIN providers p ON tp.created_by_provider_id = p.provider_id
         WHERE tp.patient_id = :patient_id
         ORDER BY tp.status DESC, tp.start_date DESC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
 
 def getTreatmentPlanItems(treatmentPlanId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             tpi.tpi_id,
             tpi.treatment_plan_id,
@@ -288,18 +272,14 @@ def getTreatmentPlanItems(treatmentPlanId: int) -> pd.DataFrame:
         LEFT JOIN resources r ON tpi.resource_id = r.resource_id
         WHERE tpi.treatment_plan_id = :treatment_plan_id
         ORDER BY tpi.item_type, tpi.start_date
-        """
-    )
+        """)
     with engine.connect() as conn:
-        return pd.read_sql(
-            sql, conn, params={"treatment_plan_id": treatmentPlanId}
-        )
+        return pd.read_sql(sql, conn, params={"treatment_plan_id": treatmentPlanId})
 
 
 def getPatientEncounters(patientId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             e.encounter_id,
             e.patient_id,
@@ -316,15 +296,12 @@ def getPatientEncounters(patientId: int) -> pd.DataFrame:
         LEFT JOIN facilities f ON e.facility_id = f.facility_id
         WHERE e.patient_id = :patient_id
         ORDER BY e.encounter_dt DESC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
 
-def getPatientAppointments(
-    patientId: int, includePast: bool = True
-) -> pd.DataFrame:
+def getPatientAppointments(patientId: int, includePast: bool = True) -> pd.DataFrame:
     engine = getDbEngine()
     base = """
         SELECT
@@ -358,8 +335,7 @@ def getPatientAppointments(
 
 def getPatientReferrals(patientId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             r.referral_id,
             r.patient_id,
@@ -378,16 +354,14 @@ def getPatientReferrals(patientId: int) -> pd.DataFrame:
         LEFT JOIN providers tp ON r.to_provider_id = tp.provider_id
         WHERE r.patient_id = :patient_id
         ORDER BY r.referral_date DESC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
 
 def getPatientInsurancePolicies(patientId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             policy_id,
             patient_id,
@@ -400,8 +374,7 @@ def getPatientInsurancePolicies(patientId: int) -> pd.DataFrame:
         FROM insurancepolicies
         WHERE patient_id = :patient_id
         ORDER BY coverage_start DESC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
@@ -411,8 +384,7 @@ def getPatientCareTeam(patientId: int) -> pd.DataFrame:
     Returns providers on the patient's care team (via careteams + careteammembers).
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             ct.care_team_id,
             ct.name AS care_team_name,
@@ -428,13 +400,13 @@ def getPatientCareTeam(patientId: int) -> pd.DataFrame:
             ON ctm.provider_id = p.provider_id
         WHERE ct.patient_id = :patient_id
         ORDER BY ct.name, p.last_name, p.first_name
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
 
 # ---------- Providers / schedules ----------
+
 
 def getProviders(activeOnly: bool = True) -> pd.DataFrame:
     engine = getDbEngine()
@@ -462,8 +434,7 @@ def getProviders(activeOnly: bool = True) -> pd.DataFrame:
 
 def getProviderById(providerId: int) -> Optional[pd.Series]:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             provider_id,
             npi,
@@ -479,8 +450,7 @@ def getProviderById(providerId: int) -> Optional[pd.Series]:
             updated_at
         FROM providers
         WHERE provider_id = :provider_id
-        """
-    )
+        """)
     with engine.connect() as conn:
         df = pd.read_sql(sql, conn, params={"provider_id": providerId})
     if df.empty:
@@ -494,8 +464,7 @@ def getProviderPanel(providerId: int) -> pd.DataFrame:
     all patients with this provider in encounters, appointments, or referrals.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT DISTINCT
             p.patient_id,
             p.mrn,
@@ -516,8 +485,7 @@ def getProviderPanel(providerId: int) -> pd.DataFrame:
             SELECT patient_id FROM referrals WHERE to_provider_id = :provider_id
         )
         ORDER BY p.last_name, p.first_name
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"provider_id": providerId})
 
@@ -533,8 +501,7 @@ def getProviderSchedule(
     now = datetime.now()
     end = now + timedelta(days=days)
 
-    sql = text(
-        """
+    sql = text("""
         SELECT
             a.appointment_id,
             a.patient_id,
@@ -554,8 +521,7 @@ def getProviderSchedule(
           AND a.start_time >= :start_time
           AND a.start_time < :end_time
         ORDER BY a.start_time
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(
             sql,
@@ -570,8 +536,7 @@ def getProviderSchedule(
 
 def getProviderRecentEncounters(providerId: int, limit: int = 20) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             e.encounter_id,
             e.patient_id,
@@ -586,8 +551,7 @@ def getProviderRecentEncounters(providerId: int, limit: int = 20) -> pd.DataFram
         WHERE e.provider_id = :provider_id
         ORDER BY e.encounter_dt DESC
         LIMIT :limit
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(
             sql, conn, params={"provider_id": providerId, "limit": limit}
@@ -595,6 +559,7 @@ def getProviderRecentEncounters(providerId: int, limit: int = 20) -> pd.DataFram
 
 
 # ---------- Facilities / resources ----------
+
 
 def getFacilities(activeOnly: bool = True) -> pd.DataFrame:
     engine = getDbEngine()
@@ -624,8 +589,7 @@ def getFacilities(activeOnly: bool = True) -> pd.DataFrame:
 
 def getFacilityResources(facilityId: int) -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             fr.facility_id,
             f.name AS facility_name,
@@ -640,15 +604,14 @@ def getFacilityResources(facilityId: int) -> pd.DataFrame:
         JOIN resources r ON fr.resource_id = r.resource_id
         WHERE fr.facility_id = :facility_id
         ORDER BY r.category, r.name
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"facility_id": facilityId})
 
+
 def getMedications() -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             medication_id,
             rxnorm_code,
@@ -657,16 +620,14 @@ def getMedications() -> pd.DataFrame:
             strength
         FROM medications
         ORDER BY name
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
 
 
 def getResources() -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             resource_id,
             name,
@@ -674,8 +635,7 @@ def getResources() -> pd.DataFrame:
             active
         FROM resources
         ORDER BY category, name
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
 
@@ -688,8 +648,7 @@ def getChronicPatientsWithNoRecentEncounter(days: int = 180) -> pd.DataFrame:
     engine = getDbEngine()
     cutoff = datetime.now() - timedelta(days=days)
 
-    sql = text(
-        """
+    sql = text("""
         SELECT *
         FROM (
             SELECT
@@ -716,12 +675,10 @@ def getChronicPatientsWithNoRecentEncounter(days: int = 180) -> pd.DataFrame:
             t.last_encounter_dt IS NULL DESC,
             t.last_encounter_dt,
             t.last_name
-        """
-    )
+        """)
 
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"cutoff": cutoff})
-
 
 
 def getActivePlansWithNoRecentEncounter(days: int = 90) -> pd.DataFrame:
@@ -732,8 +689,7 @@ def getActivePlansWithNoRecentEncounter(days: int = 90) -> pd.DataFrame:
     engine = getDbEngine()
     cutoff = datetime.now() - timedelta(days=days)
 
-    sql = text(
-        """
+    sql = text("""
         SELECT *
         FROM (
             SELECT
@@ -766,8 +722,7 @@ def getActivePlansWithNoRecentEncounter(days: int = 90) -> pd.DataFrame:
             t.last_encounter_dt IS NULL DESC,
             t.last_encounter_dt,
             t.start_date
-        """
-    )
+        """)
 
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"cutoff": cutoff})
@@ -778,8 +733,7 @@ def getPatientVitals(patientId: int) -> pd.DataFrame:
     Returns all vitals for a patient, ordered by time, across all types.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             vital_id,
             patient_id,
@@ -791,8 +745,7 @@ def getPatientVitals(patientId: int) -> pd.DataFrame:
         FROM patient_vitals
         WHERE patient_id = :patient_id
         ORDER BY measured_at ASC, vital_type
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"patient_id": patientId})
 
@@ -802,8 +755,7 @@ def getPatientVitalsByType(patientId: int, vitalType: str) -> pd.DataFrame:
     Convenience helper: vitals of a single type (e.g., 'BP_SYS').
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             vital_id,
             patient_id,
@@ -816,8 +768,7 @@ def getPatientVitalsByType(patientId: int, vitalType: str) -> pd.DataFrame:
         WHERE patient_id = :patient_id
           AND vital_type = :vital_type
         ORDER BY measured_at ASC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(
             sql,
@@ -831,15 +782,13 @@ def getLatestRiskScore(patientId: int) -> pd.Series | None:
     Latest risk score row for a single patient, or None if no scores.
     """
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT *
         FROM risk_scores
         WHERE patient_id = :patient_id
         ORDER BY generated_at DESC
         LIMIT 1
-        """
-    )
+        """)
     with engine.connect() as conn:
         df = pd.read_sql(sql, conn, params={"patient_id": patientId})
     if df.empty:
@@ -858,8 +807,7 @@ def getHighRiskPatients(
     """
     engine = getDbEngine()
     # Subquery to get latest score per patient
-    sql = text(
-        """
+    sql = text("""
         SELECT
             p.patient_id,
             p.mrn,
@@ -884,8 +832,7 @@ def getHighRiskPatients(
             (:bucket_only = 1 AND rs.risk_bucket = 'High')
           OR (:bucket_only = 0 AND rs.score >= :min_score)
         ORDER BY rs.score DESC, rs.generated_at DESC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(
             sql,
@@ -896,10 +843,10 @@ def getHighRiskPatients(
             },
         )
 
+
 def getEncounterCountsByMonth() -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             dd.year,
             dd.month,
@@ -909,16 +856,14 @@ def getEncounterCountsByMonth() -> pd.DataFrame:
         JOIN dim_date dd ON fe.date_key = dd.date_key
         GROUP BY dd.year, dd.month, dd.month_name
         ORDER BY dd.year, dd.month
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
 
 
 def getEncountersByFacility() -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             df.name AS facility_name,
             df.city,
@@ -928,16 +873,14 @@ def getEncountersByFacility() -> pd.DataFrame:
         JOIN dim_facility df ON fe.facility_key = df.facility_key
         GROUP BY df.facility_key, df.name, df.city, df.state
         ORDER BY encounter_count DESC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
 
 
 def getEncountersByProvider() -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             dp.first_name,
             dp.last_name,
@@ -947,16 +890,14 @@ def getEncountersByProvider() -> pd.DataFrame:
         JOIN dim_provider dp ON fe.provider_key = dp.provider_key
         GROUP BY dp.provider_key, dp.first_name, dp.last_name, dp.specialty_name
         ORDER BY encounter_count DESC
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
 
 
 def getWeekendVsWeekdayEncounters() -> pd.DataFrame:
     engine = getDbEngine()
-    sql = text(
-        """
+    sql = text("""
         SELECT
             dd.is_weekend,
             COUNT(*) AS encounter_count
@@ -964,8 +905,7 @@ def getWeekendVsWeekdayEncounters() -> pd.DataFrame:
         JOIN dim_date dd ON fe.date_key = dd.date_key
         GROUP BY dd.is_weekend
         ORDER BY dd.is_weekend
-        """
-    )
+        """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
 
@@ -981,10 +921,11 @@ def getCountsSummary() -> dict:
             (SELECT COUNT(*) FROM appointments
              WHERE DATE(start_time) = CURDATE()) AS today_appointments
     """)
-    
+
     with engine.connect() as conn:
         row = conn.execute(sql).mappings().first()
         return dict(row)
+
 
 def getTopConditions(limit: int = 10) -> pd.DataFrame:
     engine = getDbEngine()
@@ -1001,12 +942,14 @@ def getTopConditions(limit: int = 10) -> pd.DataFrame:
     with engine.connect() as conn:
         return pd.read_sql(sql, conn, params={"limit": limit})
 
+
 def getFacilities(activeOnly: bool = False) -> pd.DataFrame:
     engine = getDbEngine()
     where_clause = "WHERE active = 1" if activeOnly else ""
     sql = text(f"SELECT * FROM facilities {where_clause} ORDER BY name")
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
+
 
 def getProviders(activeOnly: bool = False) -> pd.DataFrame:
     engine = getDbEngine()
@@ -1020,4 +963,3 @@ def getProviders(activeOnly: bool = False) -> pd.DataFrame:
     """)
     with engine.connect() as conn:
         return pd.read_sql(sql, conn)
-

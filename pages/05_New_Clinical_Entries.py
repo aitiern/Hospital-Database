@@ -7,8 +7,8 @@ import streamlit as st
 from db.queries import (
     getFacilities,
     getPatientTreatmentPlans,
-    getMedications,   # we'll add this helper in a second
-    getResources,     # same here
+    getMedications,  # we'll add this helper in a second
+    getResources,  # same here
 )
 from db.write_queries import (
     createEncounter,
@@ -53,9 +53,7 @@ def main() -> None:
             )
         else:
             with st.form("new_encounter_form"):
-                patient_id = st.number_input(
-                    "Patient ID", min_value=1, step=1
-                )
+                patient_id = st.number_input("Patient ID", min_value=1, step=1)
 
                 facilities_df = getFacilities(activeOnly=True)
                 facility_id = None
@@ -70,20 +68,12 @@ def main() -> None:
                         + facilities_df["state"]
                         + ")"
                     )
-                    selected_label = st.selectbox(
-                        "Facility", options=facility_labels
-                    )
-                    idx = facility_labels[
-                        facility_labels == selected_label
-                    ].index[0]
-                    facility_id = int(
-                        facilities_df.loc[idx, "facility_id"]
-                    )
+                    selected_label = st.selectbox("Facility", options=facility_labels)
+                    idx = facility_labels[facility_labels == selected_label].index[0]
+                    facility_id = int(facilities_df.loc[idx, "facility_id"])
 
                 enc_date = st.date_input("Encounter date", value=date.today())
-                enc_time = st.time_input(
-                    "Encounter time", value=datetime.now().time()
-                )
+                enc_time = st.time_input("Encounter time", value=datetime.now().time())
                 reason = st.text_input("Reason for visit")
                 notes = st.text_area("Notes (optional)")
 
@@ -135,12 +125,8 @@ def main() -> None:
                         options=facility_labels,
                         key="appt_facility",
                     )
-                    idx = facility_labels[
-                        facility_labels == selected_label
-                    ].index[0]
-                    facility_id = int(
-                        facilities_df.loc[idx, "facility_id"]
-                    )
+                    idx = facility_labels[facility_labels == selected_label].index[0]
+                    facility_id = int(facilities_df.loc[idx, "facility_id"])
 
                 start_date = st.date_input(
                     "Start date", value=date.today(), key="appt_date"
@@ -152,9 +138,7 @@ def main() -> None:
                     "Duration (minutes)", min_value=15, max_value=240, value=30
                 )
 
-                reason = st.text_input(
-                    "Reason for appointment", key="appt_reason"
-                )
+                reason = st.text_input("Reason for appointment", key="appt_reason")
                 status = st.selectbox(
                     "Status",
                     options=[
@@ -211,13 +195,9 @@ def main() -> None:
                 + plans_df["status"]
                 + ")"
             )
-            selected_label = st.selectbox(
-                "Treatment plan", options=plan_labels
-            )
+            selected_label = st.selectbox("Treatment plan", options=plan_labels)
             idx = plan_labels[plan_labels == selected_label].index[0]
-            treatment_plan_id = int(
-                plans_df.loc[idx, "treatment_plan_id"]
-            )
+            treatment_plan_id = int(plans_df.loc[idx, "treatment_plan_id"])
 
             item_type = st.selectbox(
                 "Item type",
@@ -235,35 +215,20 @@ def main() -> None:
                 if meds_df.empty:
                     st.warning("No medications defined.")
                 else:
-                    med_labels = (
-                        meds_df["name"]
-                        + " "
-                        + meds_df["strength"].fillna("")
-                    )
-                    selected_med = st.selectbox(
-                        "Medication", options=med_labels
-                    )
+                    med_labels = meds_df["name"] + " " + meds_df["strength"].fillna("")
+                    selected_med = st.selectbox("Medication", options=med_labels)
                     midx = med_labels[med_labels == selected_med].index[0]
-                    medication_id = int(
-                        meds_df.loc[midx, "medication_id"]
-                    )
+                    medication_id = int(meds_df.loc[midx, "medication_id"])
             elif item_type in ["Therapy", "Procedure", "Resource"]:
                 if resources_df.empty:
                     st.warning("No resources defined.")
                 else:
                     res_labels = (
-                        resources_df["name"]
-                        + " ("
-                        + resources_df["category"]
-                        + ")"
+                        resources_df["name"] + " (" + resources_df["category"] + ")"
                     )
-                    selected_res = st.selectbox(
-                        "Resource", options=res_labels
-                    )
+                    selected_res = st.selectbox("Resource", options=res_labels)
                     ridx = res_labels[res_labels == selected_res].index[0]
-                    resource_id = int(
-                        resources_df.loc[ridx, "resource_id"]
-                    )
+                    resource_id = int(resources_df.loc[ridx, "resource_id"])
 
             instructions = st.text_area("Instructions", height=80)
             frequency = st.text_input("Frequency (e.g., BID, weekly)")
@@ -291,4 +256,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

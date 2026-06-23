@@ -178,9 +178,7 @@ def main() -> None:
         include_past = st.checkbox(
             "Include past appointments", value=True, key="include_past_appts"
         )
-        df = getPatientAppointments(
-            int(patient_id), includePast=include_past
-        )
+        df = getPatientAppointments(int(patient_id), includePast=include_past)
         if df.empty:
             st.info("No appointments recorded.")
         else:
@@ -262,4 +260,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
